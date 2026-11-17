@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AB Bank PLC - Biometric Attendance Portal</title>
+    <!-- SheetJS for Excel Download -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* Top Bar Credit */
+        .top-bar {
+            width: 100%;
+            max-width: 980px;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+        .credit-badge {
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border-left: 3px solid #cc0000;
+        }
+        /* Bank Header */
+        .bank-header {
+            width: 100%;
+            max-width: 980px;
+            background: #ffffff;
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 16px;
+            border-bottom: 4px solid #cc0000;
+        }
+        .bank-logo-img {
+            height: 40px;
+            object-fit: contain;
+        }
+        .bank-title h1 { 
+            margin: 0; 
+            font-size: 18px; 
+            color: #cc0000; /* Red color as requested */
+            font-weight: 700; 
+        }
+        .bank-title p { margin: 2px 0 0 0; font-size: 12.5px; color: #64748b; }
+
+        /* Role Switcher Tabs */
+        .role-tabs {
+            display: flex;
+            background: #e2e8f0;
+            border-radius: 10px;
+            padding: 4px;
+            width: 100%;
+            max-width: 440px;
+            margin-bottom: 18px;
+        }
+        .role-tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .role-tab.active {
+            background: #ffffff;
+            color: #cc0000;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        /* Cards */
+        .card {
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+        }
+        .admin-dashboard-card {
+            max-width: 980px !important;
+            text-align: left;
+        }
+        h2 { margin-top: 0; color: #1e293b; font-size: 20px; }
+        p { font-size: 13.5px; color: #64748b; line-height: 1.4; }
+        input, select {
+            width: 100%;
+            padding: 11px 12px;
+            margin: 7px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14.5px;
+            outline: none;
+        }
+        input:focus, select:focus { border-color: #cc0000; }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.92; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-primary { background: #cc0000; color: #fff; }
+        .btn-success { background: #16a34a; color: #fff; }
+        .btn-dark { background: #0f172a; color: #fff; }
+        .btn-outline { background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; }
+        .btn-danger { background: #dc2626; color: #fff; }
+        .btn-sm { width: auto; padding: 8px 14px; font-size: 13px; margin-top: 0; }
+        .hidden { display: none !important; }
+        .status-msg { margin-top: 14px; font-size: 13.5px; font-weight: 500; line-height: 1.4; }
+        .link-btn {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #cc0000;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .link-btn:hover { text-decoration: underline; }
+        /* Admin Dashboard UI */
+        .admin-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .filter-bar input[type="date"] {
+            width: auto;
+            margin: 0;
+            padding: 8px 12px;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        th { background: #f1f5f9; color: #1e293b; font-weight: 600; }
+        tr:hover { background: #f8fafc; }
+        .device-reset-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 14px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Credit Badge -->
+    <div class="top-bar">
+        <div class="credit-badge">Prepared by Md. Tajdiqul Alam Shah (60781)</div>
+    </div>
+
+    <!-- AB Bank Header & Logo -->
+    <div class="bank-header">
+        <img src="https://abbl.com/wp-content/uploads/2015/07/logo-for-pdf.png" alt="AB Bank Logo" class="bank-logo-img">
+        <div class="bank-title">
+            <h1>AB Bank PLC.</h1>
+            <p>Agent Banking Division | Biometric Attendance & Location Monitoring</p>
+        </div>
+    </div>
+
+    <!-- Role Switcher -->
+    <div class="role-tabs">
+        <button id="tabEmployee" class="role-tab active" onclick="switchRole('employee')">Employee Portal</button>
+        <button id="tabAdmin" class="role-tab" onclick="switchRole('admin')">Admin Portal</button>
+    </div>
+
+    <!-- ==================== EMPLOYEE PORTAL ==================== -->
+    <div id="employeePortal" class="card">
+        <h2>Employee Check-In</h2>
+
+        <!-- Registration View -->
+        <div id="empRegisterView">
+            <p>First-time setup: Enter your details to bind your Employee ID to this phone's biometric sensor.</p>
+            <input type="text" id="regEmpId" placeholder="Employee ID (e.g. 60781)" autocomplete="off">
+            <input type="text" id="regName" placeholder="Full Name" autocomplete="off">
+            <input type="text" id="regDept" placeholder="Department (e.g. Agent Banking)" autocomplete="off">
+            <input type="text" id="regPortfolio" placeholder="Portfolio / Designation (e.g. Officer)" autocomplete="off">
+            <button id="btnRegister" class="btn-primary" onclick="registerEmployee()">Register Device & Fingerprint</button>
+        </div>
+
+        <!-- Check-In View -->
+        <div id="empCheckinView" class="hidden">
+            <p>Welcome, <strong id="displayEmpName" style="color:#cc0000;"></strong></p>
+            <p style="font-size:12px; color:#475569;">ID: <span id="displayEmpId"></span> | Dept: <span id="displayEmpDept"></span></p>
+            <button id="btnCheckin" class="btn-success" onclick="employeeCheckIn()">Verify Fingerprint & Check In</button>
+            <a class="link-btn" style="color: #64748b; font-size: 12px;" onclick="clearLocalDevice()">Reset Local Device Cache</a>
+        </div>
+
+        <div id="empStatus" class="status-msg"></div>
+    </div>
+
+    <!-- ==================== ADMIN PORTAL ==================== -->
+    <div id="adminPortal" class="card hidden">
+        
+        <!-- 1. Admin Login View -->
+        <div id="adminLoginView">
+            <h2>Admin Sign In</h2>
+            <p>Multiple Admin access enabled. Enter your credentials.</p>
+            <input type="text" id="adminUser" placeholder="Admin Username" autocomplete="off">
+            <input type="password" id="adminPass" placeholder="Password">
+            <button id="btnAdminLogin" class="btn-primary" onclick="adminLogin()">Login to Dashboard</button>
+            <a class="link-btn" onclick="toggleOtpReset('login')">Forgot / Reset Password via Email OTP</a>
+            <div id="adminLoginStatus" class="status-msg"></div>
+        </div>
+
+        <!-- 2. Password Reset OTP View -->
+        <div id="adminOtpView" class="hidden">
+            <h2>Reset Password</h2>
+            <p>A 6-digit verification code will be sent to your email.</p>
+            <input type="text" id="otpAdminUser" placeholder="Enter Admin Username">
+            <button id="btnSendOtp" class="btn-primary" onclick="sendAdminOtp()">Send OTP to Email</button>
+
+            <div id="otpVerifyFields" class="hidden" style="margin-top: 12px;">
+                <input type="text" id="otpCodeInput" placeholder="Enter 6-digit OTP">
+                <input type="password" id="newAdminPass" placeholder="Enter New Password">
+                <button id="btnConfirmReset" class="btn-success" onclick="confirmPasswordReset()">Verify & Update Password</button>
+            </div>
+            <a class="link-btn" onclick="backFromOtp()">← Back to Login</a>
+            <div id="otpStatus" class="status-msg"></div>
+        </div>
+
+        <!-- 3. Admin Dashboard View -->
+        <div id="adminDashboardView" class="hidden">
+            <div class="admin-header">
+                <div>
+                    <h2 style="margin-bottom: 2px;">Attendance Dashboard</h2>
+                    <span style="font-size: 13px; color: #64748b;">Logged in Admin: <strong id="loggedAdminName"></strong></span>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-outline btn-sm" onclick="toggleOtpReset('dashboard')">Reset Password</button>
+                    <button class="btn-dark btn-sm" onclick="adminLogout()">Logout</button>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="filter-bar">
+                <label style="font-size: 13px; font-weight: 600; color: #334155;">Select Date:</label>
+                <input type="date" id="reportDateInput">
+                <button class="btn-primary btn-sm" onclick="loadDateReport()">View Report</button>
+                <button class="btn-success btn-sm" onclick="downloadDateExcel()">Download Date Excel</button>
+                <button class="btn-dark btn-sm" onclick="downloadFullExcel()">Full Report Excel</button>
+            </div>
+
+            <div id="dashboardStatus" class="status-msg" style="margin-bottom: 10px;"></div>
+
+            <!-- Report Table -->
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Date</th>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Portfolio</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Location Map</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody">
+                        <tr><td colspan="9" style="text-align: center; color: #64748b;">Select date and click "View Report"</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Utility: Clear Device Lock for Employee -->
+            <div class="device-reset-box">
+                <div style="flex:1; text-align: left;">
+                    <strong style="font-size: 13.5px; color:#1e293b;">Reset Employee Device Lock</strong>
+                    <p style="margin:2px 0 0 0; font-size:12px;">If an employee changes their phone, clear their binding here.</p>
+                </div>
+                <input type="text" id="resetTargetEmpId" placeholder="Employee ID" style="width: 140px; margin:0;">
+                <button class="btn-danger btn-sm" onclick="resetEmployeeDevice()">Clear Lock</button>
+            </div>
+            <div id="resetDeviceStatus" style="font-size: 12px; margin-top: 6px; text-align: left;"></div>
+        </div>
+
+    </div>
+
+<script>
+// REPLACE WITH YOUR LIVE GOOGLE APPS SCRIPT WEB APP URL (/exec)
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzkFaGWdn8Avn00IwOMhA6I5825c_CT2S5Zm1mjHCtN6EfY2dUa777nyU5B_tZdiYezow/exec";
+
+let currentAdminUser = "";
+let currentFilteredRecords = [];
+let otpReturnTarget = "login";
+
+async function callBackend(payload) {
+    const res = await fetch(WEB_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+    });
+    return await res.json();
+}
+
+function bufferToBase64url(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let str = '';
+    for (const charCode of bytes) str += String.fromCharCode(charCode);
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function base64urlToBuffer(base64url) {
+    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    const padLen = (4 - (base64.length % 4)) % 4;
+    const padded = base64.padEnd(base64.length + padLen, '=');
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+}
+
+function setStatus(elId, msg, isError = false) {
+    const el = document.getElementById(elId);
+    if(el) {
+        el.style.color = isError ? "#dc2626" : "#16a34a";
+        el.innerText = msg;
+    }
+}
+
+window.onload = function() {
+    const dateInput = document.getElementById("reportDateInput");
+    if(dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+    const savedEmpId = localStorage.getItem("att_empId");
+    const savedCredId = localStorage.getItem("att_credId");
+    const savedName = localStorage.getItem("att_name");
+    const savedDept = localStorage.getItem("att_dept");
+
+    if (savedEmpId && savedCredId) {
+        const regView = document.getElementById("empRegisterView");
+        const checkinView = document.getElementById("empCheckinView");
+        if(regView) regView.classList.add("hidden");
+        if(checkinView) checkinView.classList.remove("hidden");
+        
+        const dispId = document.getElementById("displayEmpId");
+        const dispName = document.getElementById("displayEmpName");
+        const dispDept = document.getElementById("displayEmpDept");
+        if(dispId) dispId.innerText = savedEmpId;
+        if(dispName) dispName.innerText = savedName || "Employee";
+        if(dispDept) dispDept.innerText = savedDept || "AB Bank";
+    }
+};
+
+function switchRole(role) {
+    const empTab = document.getElementById("tabEmployee");
+    const adminTab = document.getElementById("tabAdmin");
+    const empPortal = document.getElementById("employeePortal");
+    const adminPortal = document.getElementById("adminPortal");
+
+    if (role === "employee") {
+        empTab.classList.add("active");
+        adminTab.classList.remove("active");
+        empPortal.classList.remove("hidden");
+        adminPortal.classList.add("hidden");
+    } else {
+        adminTab.classList.add("active");
+        empTab.classList.remove("active");
+        adminPortal.classList.remove("hidden");
+        empPortal.classList.add("hidden");
+
+        if(!currentAdminUser) {
+            document.getElementById("adminLoginView").classList.remove("hidden");
+            document.getElementById("adminOtpView").classList.add("hidden");
+            document.getElementById("adminDashboardView").classList.add("hidden");
+            adminPortal.classList.remove("admin-dashboard-card");
+        }
+    }
+}
+
+async function registerEmployee() {
+    const empId = document.getElementById("regEmpId").value.trim();
+    const name = document.getElementById("regName").value.trim();
+    const dept = document.getElementById("regDept").value.trim();
+    const portfolio = document.getElementById("regPortfolio").value.trim();
+    const btn = document.getElementById("btnRegister");
+
+    if (!empId || !name || !dept || !portfolio) return alert("Please fill in all employee details.");
+    if (!window.PublicKeyCredential) return setStatus("empStatus", "Biometrics not supported on this browser.", true);
+
+    try {
+        btn.disabled = true;
+        setStatus("empStatus", "Prompting biometric fingerprint sensor...");
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const credential = await navigator.credentials.create({
+            publicKey: {
+                challenge: challenge,
+                rp: { name: "AB Bank Attendance", id: window.location.hostname },
+                user: { id: new TextEncoder().encode(empId), name: empId, displayName: name },
+                pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+                authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                timeout: 60000
+            }
+        });
+
+        const credId = bufferToBase64url(credential.rawId);
+        setStatus("empStatus", "Saving registration to server...");
+
+        const res = await callBackend({ action: "register", empId, name, dept, portfolio, credId });
+
+        if (res.status === "success") {
+            localStorage.setItem("att_empId", empId);
+            localStorage.setItem("att_credId", credId);
+            localStorage.setItem("att_name", name);
+            localStorage.setItem("att_dept", dept);
+            setStatus("empStatus", "✅ Registered successfully! Reloading...");
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            setStatus("empStatus", "❌ " + res.message, true);
+        }
+    } catch (err) {
+        setStatus("empStatus", "❌ Registration failed: " + err.message, true);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function employeeCheckIn() {
+    const empId = localStorage.getItem("att_empId");
+    const credId = localStorage.getItem("att_credId");
+    const btn = document.getElementById("btnCheckin");
+
+    try {
+        btn.disabled = true;
+        setStatus("empStatus", "Step 1/2: Verify your fingerprint...");
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        await navigator.credentials.get({
+            publicKey: {
+                challenge: challenge,
+                rpId: window.location.hostname,
+                allowCredentials: [{ type: "public-key", id: base64urlToBuffer(credId) }],
+                userVerification: "required",
+                timeout: 60000
+            }
+        });
+
+        setStatus("empStatus", "Step 2/2: Fingerprint verified! Capturing GPS location...");
+
+        navigator.geolocation.getCurrentPosition(
+            async function(pos) {
+                try {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+
+                    setStatus("empStatus", "Submitting attendance to server...");
+                    const res = await callBackend({ action: "checkin", empId, credId, lat, lng });
+
+                    if (res.status === "success") {
+                        setStatus("empStatus", "✅ " + res.message);
+                    } else {
+                        setStatus("empStatus", "❌ " + res.message, true);
+                    }
+                } catch (err) {
+                    setStatus("empStatus", "❌ Error: " + err.message, true);
+                } finally {
+                    btn.disabled = false;
+                }
+            },
+            function(geoErr) {
+                btn.disabled = false;
+                setStatus("empStatus", "❌ GPS Error: " + geoErr.message, true);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    } catch (err) {
+        btn.disabled = false;
+        setStatus("empStatus", "❌ Fingerprint verification failed: " + err.message, true);
+    }
+}
+
+function clearLocalDevice() {
+    if (confirm("Clear local device session?")) {
+        localStorage.clear();
+        location.reload();
+    }
+}
+
+async function adminLogin() {
+    const username = document.getElementById("adminUser").value.trim();
+    const password = document.getElementById("adminPass").value.trim();
+    const btn = document.getElementById("btnAdminLogin");
+
+    if (!username || !password) return alert("Enter credentials.");
+
+    try {
+        btn.disabled = true;
+        setStatus("adminLoginStatus", "Authenticating...");
+        const res = await callBackend({ action: "admin_login", username, password });
+
+        if (res.status === "success") {
+            currentAdminUser = username;
+            document.getElementById("loggedAdminName").innerText = username;
+            document.getElementById("adminLoginView").classList.add("hidden");
+            document.getElementById("adminPortal").classList.add("admin-dashboard-card");
+            document.getElementById("adminDashboardView").classList.remove("hidden");
+            loadDateReport();
+        } else {
+            setStatus("adminLoginStatus", "❌ " + res.message, true);
+        }
+    } catch (err) {
+        setStatus("adminLoginStatus", "❌ Error: " + err.message, true);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function toggleOtpReset(fromWhere) {
+    otpReturnTarget = fromWhere;
+    document.getElementById("adminLoginView").classList.add("hidden");
+    document.getElementById("adminDashboardView").classList.add("hidden");
+    document.getElementById("adminPortal").classList.remove("admin-dashboard-card");
+    document.getElementById("adminOtpView").classList.remove("hidden");
+    document.getElementById("otpVerifyFields").classList.add("hidden");
+    document.getElementById("otpStatus").innerText = "";
+    if (fromWhere === "dashboard" && currentAdminUser) {
+        document.getElementById("otpAdminUser").value = currentAdminUser;
+    }
+}
+
+function backFromOtp() {
+    document.getElementById("adminOtpView").classList.add("hidden");
+    if (otpReturnTarget === "dashboard" && currentAdminUser) {
+        document.getElementById("adminPortal").classList.add("admin-dashboard-card");
+        document.getElementById("adminDashboardView").classList.remove("hidden");
+    } else {
+        document.getElementById("adminLoginView").classList.remove("hidden");
+    }
+}
+
+async function sendAdminOtp() {
+    const username = document.getElementById("otpAdminUser").value.trim();
+    if (!username) return alert("Enter Admin Username.");
+    const res = await callBackend({ action: "send_otp", username });
+    if (res.status === "success") {
+        setStatus("otpStatus", "✅ " + res.message);
+        document.getElementById("otpVerifyFields").classList.remove("hidden");
+    } else {
+        setStatus("otpStatus", "❌ " + res.message, true);
+    }
+}
+
+async function confirmPasswordReset() {
+    const username = document.getElementById("otpAdminUser").value.trim();
+    const otp = document.getElementById("otpCodeInput").value.trim();
+    const newPassword = document.getElementById("newAdminPass").value.trim();
+    const res = await callBackend({ action: "reset_password", username, otp, newPassword });
+    if (res.status === "success") {
+        setStatus("otpStatus", "✅ " + res.message);
+        setTimeout(() => { currentAdminUser = ""; backFromOtp(); }, 1500);
+    } else {
+        setStatus("otpStatus", "❌ " + res.message, true);
+    }
+}
+
+function adminLogout() {
+    currentAdminUser = "";
+    document.getElementById("adminPass").value = "";
+    document.getElementById("adminDashboardView").classList.add("hidden");
+    document.getElementById("adminPortal").classList.remove("admin-dashboard-card");
+    document.getElementById("adminLoginView").classList.remove("hidden");
+}
+
+async function loadDateReport() {
+    const date = document.getElementById("reportDateInput").value;
+    const tbody = document.getElementById("reportTableBody");
+    setStatus("dashboardStatus", "Loading report...");
+
+    const res = await callBackend({ action: "get_report", date });
+    if (res.status === "success") {
+        currentFilteredRecords = res.records;
+        tbody.innerHTML = "";
+        if (res.records.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#64748b;">No records found for ${date}.</td></tr>`;
+            setStatus("dashboardStatus", "0 records found.");
+            return;
+        }
+        res.records.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${r.timestamp}</td>
+                <td>${r.date}</td>
+                <td><strong>${r.empId}</strong></td>
+                <td>${r.name}</td>
+                <td>${r.dept}</td>
+                <td>${r.portfolio}</td>
+                <td>${r.latitude}</td>
+                <td>${r.longitude}</td>
+                <td><a href="${r.mapLink}" target="_blank" style="color:#cc0000; font-weight:600;">View Map</a></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        setStatus("dashboardStatus", `Loaded ${res.records.length} record(s).`);
+    }
+}
+
+function exportToExcel(records, filename) {
+    if (!records.length) return alert("No data to export.");
+    const formatted = records.map(r => ({
+        "Timestamp": r.timestamp,
+        "Date": r.date,
+        "Employee ID": r.empId,
+        "Name": r.name,
+        "Department": r.dept,
+        "Portfolio": r.portfolio,
+        "Latitude": r.latitude,
+        "Longitude": r.longitude,
+        "Google Maps Link": r.mapLink
+    }));
+    const ws = XLSX.utils.json_to_sheet(formatted);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+    XLSX.writeFile(wb, filename);
+}
+
+function downloadDateExcel() {
+    const date = document.getElementById("reportDateInput").value;
+    exportToExcel(currentFilteredRecords, `AB_Bank_Attendance_${date}.xlsx`);
+}
+
+async function downloadFullExcel() {
+    const res = await callBackend({ action: "get_report", date: "" });
+    if (res.status === "success") exportToExcel(res.records, "AB_Bank_Full_Attendance_Report.xlsx");
+}
+
+async function resetEmployeeDevice() {
+    const empId = document.getElementById("resetTargetEmpId").value.trim();
+    if (!empId) return alert("Enter Employee ID to clear lock.");
+    const res = await callBackend({ action: "reset_device", empId });
+    const statEl = document.getElementById("resetDeviceStatus");
+    statEl.style.color = res.status === "success" ? "#16a34a" : "#dc2626";
+    statEl.innerText = res.message;
+}
+</script>
+
+</body>
+</html>
